@@ -24,7 +24,7 @@ jobs:
       with:
         repository: explicitworkload/SFAHiddenRepository
         #path: <folder of choice>
-        token: ${{ secrets.<token_name> }}
+        token: ${{ secrets.TEST_TOKEN }}
     - name: Show hidden files
       run: |
         ls
