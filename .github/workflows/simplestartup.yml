@@ -27,4 +27,4 @@ jobs:
         token: ${{ secrets.<token_name> }}
     - name: Show hidden files
       run: |
-  ls
+        ls
