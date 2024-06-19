@@ -1,0 +1,57 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Step 2: Set up Docker and build a simple OS container
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      
+      - name: Build the container
+        run: docker build -t my-container .
+
+      # Step 3: Extract repository containing source code to container
+      - name: Extract source code
+        run: docker cp . my-container:/source
+
+      # Step 4: Extract test scripts and run tests
+      - name: Run tests
+        run: |
+          docker cp test_script.sh my-container:/source/test_script.sh
+          docker exec my-container /bin/bash -c "cd /source && ./test_script.sh"
+
+      # Step 5: Prepare and extract source codes
+      - name: Prepare source code release
+        run: |
+          docker cp . my-container:/source
+          docker exec my-container /bin/bash -c "cd /source && tar -czf source_code.tar.gz ."
+
+      # Step 6: Deploy source code using a simple release
+      - name: Create release and upload artifacts
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: Automated release from CI/CD pipeline
+          draft: false
+          prerelease: false
+          
+      - name: Upload source code artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: source_code
+          path: /source/source_code.tar.gz
